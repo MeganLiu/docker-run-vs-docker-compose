@@ -1,0 +1,90 @@
+Difference between docker-compose and docker run
+The key difference between docker run versus docker-compose is that docker run is entirely command line based, while docker-compose reads configuration data from a YAML file. 
+
+The second major difference is that docker run can only start one container at a time, while docker-compose will configure and run multiple.
+
+Imagine you wanted to use an Nginx container to test your website on your desktop computer. There are two available approaches:
+
+Start the Nginx container on the command line with docker run
+Start the Nginx with the docker-compose up and a preconfigured YAML file
+
+Example of the docker-compose.yaml approach
+Contrast the docker run command with docker-compose.
+
+The docker-compose command codes all runtime configuration data in an aptly named YAML file called docker-compose.yaml.
+
+A docker-compose.yaml file equivalent to the docker run command above would look like this:
+
+version: '3.9'
+services:
+  nginx-service:
+    container_name: my-website
+    image: nginx:latest
+    cpus: 1.5
+    mem_limit: 2048m
+    ports:
+      - "80:80"
+    volumes:
+      $PWD/website:/usr/share/nginx/html
+The docker-compose up command
+Once the docker-compose.yaml file is configured, the described Docker container can be started simply by running the docker-compose up command in the same folder as the file:
+
+docker-compose up -d --rm
+The end result of running either the docker run command or the docker-compose up command is exactly the same thing: a properly parameterized and configured container is started.
+
+Running multiple containers
+Another key benefit of docker-compose versus docker run is the ability to configure and start multiple containers at the same time.
+
+For example, if your cloud-native app needed Tomcat, Nginx and Apache httpd containers to all run at the same time, you’d have to issue three separate docker run command:
+
+docker run -d --rm --name=my-website-01 --cpus=1.5 --memory=2048m -p 80:80 -v $PWD/website:/usr/share/nginx/html/ nginx:latest
+docker run -d --rm --name=my-website-02 --cpus=1.5 --memory=2048m -p 88:80 httpd:latest
+docker run -d --rm --name=my-java-app-1 --cpus=2.5 --memory=4096m -p 8099:8080 tomcat:latest
+In contrast to docker run, docker-compose allows for the configuration of multiple containers in a single YAML file. When the docker-compose up command runs, it will start every container referenced in the docker-compose.yaml file.
+
+version: '3.9'
+services:
+  nginx-service:
+    container_name: my-website-01
+    image: nginx:latest
+    cpus: 1.5
+    mem_limit: 2048m
+    ports:
+      - "80:80"
+    volumes:
+      $PWD/website:/usr/share/nginx/html
+  apache-service:
+    container_name: my-website-02
+    image: http:latest
+    cpus: 1.5
+    mem_limit: 2048m
+    ports:
+      - "88:80"
+  tomcat-service:
+    container_name: my-java-app-1
+    image: tomcat:latest
+    cpus: 2.5
+    mem_limit: 4096m
+    ports:
+      - "8099:80"
+Docker run or compose: Which one should you choose?
+There are three key scenarios when it is better to use docker-compose over docker run:
+
+When parameters push a docker run command beyond 75 characters in length
+When multiple container must run at the same time
+When there are startup dependencies between containers
+When configurations need to be validated by an IDE or linter
+When change histories need to be managed in Git or GitHub
+
+
+Benefits of docker-compose over run
+As cloud-native environments increase in complexity, docker run commands will become unmanageable long. When a docker run command becomes more than seventy or eighty characters in length, it makes more sense to configure the container in a docker-compose.yaml file.
+
+Furthermore, when a cloud-native application requires more the support of more than one running container, docker-compose is a better option than docker run. 
+
+
+docker-compose can also configure dependencies between containers. For example, if you must ensure that a Redis Docker container must fully start before an Nginx container, this can be configured in the docker-compose.yaml file.
+
+And finally, the docker-compose.yaml file fits in better with source code editors, IDEs and linters that can validate the YAML file’s syntax. This becomes important when the a scripted or declarative DevOps pipeline is responsible for the deployment of a cloud-native application or microserice.
+
+The Docker SDK provides a variety of tools that target different use cases and problem domains. Both the docker run and docker-compose commands provide the end user the ability to configure and run Docker containers, but there are indeed instances when one is preferable to the other.
